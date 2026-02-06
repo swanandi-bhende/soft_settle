@@ -1,6 +1,6 @@
 // packages/backend/src/models/Agent.ts
 
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document, Model } from 'mongoose';
 
 /**
  * Agent Interface
@@ -28,7 +28,7 @@ const AgentSchema: Schema<IAgent> = new Schema({
   description: { type: String, default: '' },
   apiEndpoint: { type: String, default: '' },
   walletAddress: { type: String, required: true },
-  activeSessions: [{ type: String, default: [] }],
+  activeSessions: { type: [String], default: [] },
   isAvailable: { type: Boolean, default: true },
   reputation: {
     score: { type: Number, default: 500 },
@@ -38,4 +38,5 @@ const AgentSchema: Schema<IAgent> = new Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-export const Agent = mongoose.model<IAgent>('Agent', AgentSchema);
+// Export the model
+export const Agent: Model<IAgent> = mongoose.model<IAgent>('Agent', AgentSchema);

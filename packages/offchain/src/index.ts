@@ -9,19 +9,26 @@ import { Uint8ArrayList } from 'uint8arraylist';
 import { ethers } from 'ethers';
 
 /**
+ * Minimal type for Libp2p node to satisfy TypeScript
+ */
+interface Libp2pNode {
+  start: () => Promise<void>;
+  getMultiaddrs: () => string[];
+  handle: (protocol: string, handler: (stream: any) => Promise<void>) => void;
+}
+
+/**
  * -------------------------
  * P2P Node Setup
  * -------------------------
  */
 export const createNode = async (wallet: ethers.Wallet) => {
-  const node = await createLibp2p({
-    addresses: {
-      listen: ['/ip4/0.0.0.0/tcp/0']
-    },
+  const node: Libp2pNode = await createLibp2p({
+    addresses: { listen: ['/ip4/0.0.0.0/tcp/0'] },
     transports: [tcp()],
     connectionEncrypters: [noise()],
     streamMuxers: [yamux()]
-  });
+  }) as any;
 
   await node.start();
 
@@ -33,11 +40,11 @@ export const createNode = async (wallet: ethers.Wallet) => {
    * Handle incoming micro-credit state updates
    * -------------------------
    */
-  node.handle('/soft-settle/1.0.0', async (stream) => {
+  node.handle('/soft-settle/1.0.0', async (stream: any) => {
     try {
       // Collect all chunks from the stream
-      const chunks = await all(stream); // Uint8ArrayList[]
-      
+      const chunks: Uint8Array[] | Uint8ArrayList[] = await all(stream);
+
       // Convert all chunks to Uint8Array
       const buffers = chunks.map((chunk) =>
         chunk instanceof Uint8ArrayList ? chunk.slice() : chunk
@@ -67,7 +74,7 @@ export const createNode = async (wallet: ethers.Wallet) => {
  * -------------------------
  */
 async function handleWorkUnit(
-  stream: any,
+  stream: { write: (data: Uint8Array) => Promise<void>; close: () => Promise<void> },
   workRequest: { currentBalance: number; cost: number; nonce: number },
   wallet: ethers.Wallet
 ) {
@@ -88,9 +95,9 @@ async function handleWorkUnit(
       signature: signature
     });
 
-    // Write back as Uint8Array
     await stream.write(new TextEncoder().encode(payload));
     console.log('[P2P] Work unit response sent:', payload);
+
   } catch (err) {
     console.error('[P2P] Work unit handling failed:', err);
   }
