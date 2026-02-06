@@ -1,0 +1,12 @@
+config:
+  target: "http://localhost:3000/graphql"
+  phases:
+    - duration: 60
+      arrivalRate: 20
+scenarios:
+  - name: "Simulate Agent Session"
+    flow:
+      - post:
+          url: "/"
+          json:
+            query: "mutation { initSession(providerEns: 'agent.eth', deposit: 10.0) { id } }"
