@@ -16,51 +16,69 @@ contract SoftSettleChannel is NitroliteCore {
     IERC20 public usdc;
     IReputationManager public reputationManager;
 
-    event SessionClosed(
-        address indexed consumerNode,
-        bool successful,
-        uint256 transferred
-    );
+    struct Session {
+        address consumer;
+        uint256 balance;
+        bool active;
+    }
 
-    // 🔔 Emitted when on-chain balance is insufficient and
-    // off-chain (Circle) settlement is required
-    event DeficitDetected(uint256 deficit);
+    mapping(bytes32 => Session) public sessions;
+
+    // Events
+    event SessionClosed(bytes32 indexed sessionId, bool successful, uint256 transferred);
+    event DeficitDetected(address indexed consumer, uint256 deficit);
 
     constructor(address _usdc, address _reputationManager) {
         usdc = IERC20(_usdc);
         reputationManager = IReputationManager(_reputationManager);
     }
 
-    // Logic to lock USDC as collateral for the micro-credit line
+    /// @notice Deposit USDC as collateral
     function depositCollateral(uint256 amount) external {
         usdc.transferFrom(msg.sender, address(this), amount);
     }
 
+    /// @notice Open a session (optional helper)
+    function openSession(bytes32 sessionId, address consumer, uint256 deposit) external {
+        sessions[sessionId] = Session({
+            consumer: consumer,
+            balance: deposit,
+            active: true
+        });
+    }
+
     /**
-     * @dev Called when both parties mutually close the session
+     * @notice Called when both parties mutually close the session
+     * @param sessionId Unique session identifier
+     * @param finalTransferred Amount settled at the end of session
      */
     function closeSessionMutual(
-        address consumerNode,
+        bytes32 sessionId,
         uint256 finalTransferred
-    ) internal override {
-        // ---- Nitrolite settlement logic ----
-        super.closeSessionMutual(consumerNode, finalTransferred);
+    ) external {
+        Session storage session = sessions[sessionId];
+        require(session.active, "Session inactive");
 
-        // ---- deficit detection (Circle payout trigger) ----
         uint256 balance = usdc.balanceOf(address(this));
+        bool successful = true;
+
+        // Deficit detection
         if (finalTransferred > balance) {
             uint256 deficit = finalTransferred - balance;
-            emit DeficitDetected(deficit);
+            emit DeficitDetected(session.consumer, deficit);
+            successful = false;
         }
 
-        // ---- reputation update ----
-        reputationManager.updateReputation(
-            consumerNode,
-            true,
-            finalTransferred
-        );
+        // Update reputation
+        reputationManager.updateReputation(session.consumer, successful, finalTransferred);
 
-        // ---- event ----
-        emit SessionClosed(consumerNode, true, finalTransferred);
+        // Mark session closed
+        session.active = false;
+
+        // Emit session closed event
+        emit SessionClosed(sessionId, successful, finalTransferred);
+
+        // Call parent NitroliteCore logic
+        super.closeSessionMutual(session.consumer, finalTransferred);
     }
 }
