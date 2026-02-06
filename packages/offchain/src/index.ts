@@ -105,6 +105,40 @@ async function handleWorkUnit(
 
 /**
  * -------------------------
+ * EIP-712 Setup for State Validation
+ * -------------------------
+ */
+const domain = {
+  name: 'SoftSettleChannel',
+  version: '1',
+  chainId: 80001, // Polygon Mumbai
+  verifyingContract: process.env.CHANNEL_ADDRESS
+};
+
+const types = {
+  StateUpdate: [
+    { name: 'shiftAmount', type: 'uint256' },
+    { name: 'newBalance', type: 'uint256' },
+    { name: 'nonce', type: 'uint256' },
+  ]
+};
+
+export function validateEIP712(
+  update: { shiftAmount: bigint, newBalance: bigint, nonce: bigint },
+  signature: string,
+  expectedSigner: string
+): boolean {
+  try {
+    const recovered = ethers.verifyTypedData(domain, types, update, signature);
+    return recovered.toLowerCase() === expectedSigner.toLowerCase();
+  } catch (error) {
+    console.error("Signature Verification Failed:", error);
+    return false;
+  }
+}
+
+/**
+ * -------------------------
  * Start Node
  * -------------------------
  */
