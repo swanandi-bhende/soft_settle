@@ -1,5 +1,7 @@
 import { useRouter } from 'next/router';
-import { useQuery, useMutation, gql } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
+
 import SessionLiveFeed from '@/components/SessionLiveFeed';
 
 const GET_SESSION = gql`
@@ -17,9 +19,17 @@ const GET_SESSION = gql`
 export default function SessionDetail() {
   const router = useRouter();
   const { id } = router.query;
-  const { data, loading } = useQuery(GET_SESSION, { variables: { id } });
 
-  if (loading) return <div className="p-20 text-center">Loading Session Data...</div>;
+  const { data, loading, error } = useQuery(GET_SESSION, {
+    variables: { id },
+    skip: !id, // 👈 important for Next.js routing
+  });
+
+  if (loading)
+    return <div className="p-20 text-center">Loading Session Data...</div>;
+
+  if (error)
+    return <div className="p-20 text-center text-red-600">Failed to load session</div>;
 
   const session = data.monitorSession;
 
@@ -27,23 +37,47 @@ export default function SessionDetail() {
     <div className="max-w-4xl mx-auto py-12 px-4">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Session Overview</h1>
-        <span className={`px-4 py-1 rounded-full text-sm ${session.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+        <span
+          className={`px-4 py-1 rounded-full text-sm ${
+            session.status === 'active'
+              ? 'bg-green-100 text-green-700'
+              : 'bg-red-100 text-red-700'
+          }`}
+        >
           {session.status.toUpperCase()}
         </span>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
         <div className="space-y-4">
-          <p className="text-gray-500">Consumer: <span className="text-black font-mono">{session.consumerEns}</span></p>
-          <p className="text-gray-500">Provider: <span className="text-black font-mono">{session.providerEns}</span></p>
-          <p className="text-gray-500">Locked Deposit: <span className="text-black font-bold">{session.deposit} USDC</span></p>
+          <p className="text-gray-500">
+            Consumer:{' '}
+            <span className="text-black font-mono">
+              {session.consumerEns}
+            </span>
+          </p>
+          <p className="text-gray-500">
+            Provider:{' '}
+            <span className="text-black font-mono">
+              {session.providerEns}
+            </span>
+          </p>
+          <p className="text-gray-500">
+            Locked Deposit:{' '}
+            <span className="text-black font-bold">
+              {session.deposit} USDC
+            </span>
+          </p>
         </div>
+
         <SessionLiveFeed sessionId={id as string} />
       </div>
 
       <div className="bg-gray-50 p-6 rounded-xl border border-dashed border-gray-300">
         <h4 className="font-bold mb-2">Audit Reports</h4>
-        <button className="text-blue-600 hover:underline">Export Session Logs (CSV)</button>
+        <button className="text-blue-600 hover:underline">
+          Export Session Logs (CSV)
+        </button>
       </div>
     </div>
   );
