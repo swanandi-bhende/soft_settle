@@ -4,29 +4,24 @@ import { ethers } from 'ethers';
 import { Agent } from '../models/Agent';
 import { Session } from '../models/Session';
 import { PubSub } from 'graphql-subscriptions';
+import { logToIPFS } from '../integrations/ipfs'; // IPFS logging utility
+
+// Use require for json2csv to avoid missing types
+const { Parser } = require('json2csv');
 
 // Initialize PubSub for subscriptions
 const pubsub = new PubSub();
 
 export const resolvers = {
   Query: {
-    /**
-     * Get an agent by ENS domain
-     */
     getAgent: async (_: any, { domain }: { domain: string }) => {
       return await Agent.findOne({ ensDomain: domain });
     },
 
-    /**
-     * List all active sessions
-     */
     activeSessions: async () => await Session.find({ status: 'active' }),
   },
 
   Mutation: {
-    /**
-     * Register a new agent (or update existing)
-     */
     registerAgent: async (_: any, { domain, description, sig }: any) => {
       const message = `Register Soft-Settle Agent: ${domain}`;
       const recoveredAddress = ethers.verifyMessage(message, sig);
@@ -40,19 +35,13 @@ export const resolvers = {
       return agent;
     },
 
-    /**
-     * Update off-chain session state and notify subscribers
-     */
     updateOffChainState: async (_: any, { sessionId, newBalance }: any) => {
-      // Update the session in DB
       await Session.findByIdAndUpdate(sessionId, { balance: newBalance });
 
-      // Publish update for global subscription
       pubsub.publish('SESSION_UPDATED', {
         sessionProgress: { sessionId, newBalance },
       });
 
-      // Publish per-session update
       pubsub.publish(`SESSION_${sessionId}`, {
         sessionUpdated: { id: sessionId, balance: newBalance, status: 'active' },
       });
@@ -60,30 +49,46 @@ export const resolvers = {
       return true;
     },
 
-    /**
-     * Update session state for a specific session (used by off-chain relay)
-     */
     updateSessionState: async (_: any, { sessionId, balance }: any) => {
       const updated = { id: sessionId, balance, status: 'active' };
-
-      // Publish per-session subscription event
       pubsub.publish(`SESSION_${sessionId}`, { sessionUpdated: updated });
-
       return updated;
+    },
+
+    disputeSession: async (_: any, { sessionId, reason }: { sessionId: string; reason: string }) => {
+      const session = await Session.findOneAndUpdate(
+        { sessionId },
+        { status: 'disputed' },
+        { new: true }
+      );
+
+      if (!session) throw new Error("Session not found");
+
+      // Log dispute event for audit trail
+      session.logs.push({ timestamp: new Date(), event: `DISPUTE: ${reason}` });
+      await session.save();
+
+      return session;
+    },
+
+    exportReport: async (_: any, { sessionId }: { sessionId: string }) => {
+      const session = await Session.findOne({ sessionId });
+      if (!session) throw new Error("Session not found");
+
+      const json2csvParser = new Parser();
+      const csv = json2csvParser.parse(session.logs);
+
+      const ipfsHash = await logToIPFS({ sessionId, csv, finalizedAt: new Date() });
+
+      return { hash: ipfsHash, data: csv };
     },
   },
 
   Subscription: {
-    /**
-     * Global session progress subscription
-     */
     sessionProgress: {
       subscribe: () => pubsub.asyncIterator(['SESSION_UPDATED']),
     },
 
-    /**
-     * Subscription for a specific session
-     */
     sessionUpdated: {
       subscribe: (_: any, { sessionId }: { sessionId: string }) =>
         pubsub.asyncIterator([`SESSION_${sessionId}`]),
