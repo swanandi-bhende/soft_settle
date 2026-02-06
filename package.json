@@ -22,6 +22,7 @@
     "express": "^4.18.2",
     "framer-motion": "^12.33.0",
     "graphql": "^16.12.0",
+    "graphql-subscriptions": "^3.0.0",
     "ioredis": "^5.9.2",
     "it-all": "^3.0.9",
     "libp2p": "^3.1.3",
