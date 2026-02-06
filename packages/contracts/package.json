@@ -12,6 +12,7 @@
     "viem": "^2.45.1"
   },
   "dependencies": {
+    "@ensdomains/resolver": "^0.3.1",
     "@erc7824/nitrolite": "^0.5.3",
     "@openzeppelin/contracts": "5.4.0"
   }
