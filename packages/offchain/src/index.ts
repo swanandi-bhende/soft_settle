@@ -108,9 +108,9 @@ export const createNode = async (wallet: ethers.Wallet) => {
   // Handle incoming micro-credit state updates
   node.handle('/soft-settle/1.0.0', async (stream: any) => {
     try {
-      const chunks: Uint8Array[] | Uint8ArrayList[] = await all(stream);
-      const buffers = chunks.map((chunk) =>
-        chunk instanceof Uint8ArrayList ? chunk.slice() : chunk
+      const chunks = await all(stream);
+      const buffers = chunks.map((chunk: Uint8Array | Uint8ArrayList) =>
+        chunk instanceof Uint8ArrayList ? chunk.subarray() : chunk
       );
 
       const data = Buffer.concat(buffers).toString('utf8');

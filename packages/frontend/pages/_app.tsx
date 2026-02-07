@@ -4,43 +4,39 @@ import type { AppProps } from 'next/app';
 import { ApolloProvider } from '@apollo/client/react';
 import { client } from '../lib/apollo';
 
-import { WagmiConfig, createConfig, configureChains } from 'wagmi';
+import { WagmiProvider } from 'wagmi';
 import { mainnet } from 'wagmi/chains';
-import { publicProvider } from 'wagmi/providers/public';
+import { http } from 'wagmi';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import {
   RainbowKitProvider,
-  getDefaultWallets,
+  getDefaultConfig,
 } from '@rainbow-me/rainbowkit';
 import '@rainbow-me/rainbowkit/styles.css';
 
-// 1️⃣ Configure chains
-const { chains, publicClient } = configureChains(
-  [mainnet],
-  [publicProvider()]
-);
-
-// 2️⃣ Get wallet connectors
-const { connectors } = getDefaultWallets({
+const config = getDefaultConfig({
   appName: 'Soft-Settle',
   projectId: 'YOUR_WALLETCONNECT_PROJECT_ID',
-  chains,
+  chains: [mainnet],
+  transports: {
+    [mainnet.id]: http(),
+  },
+  ssr: true, // If using Next.js
 });
 
-// 3️⃣ Create wagmi config (v2 style)
-const config = createConfig({
-  connectors,
-  publicClient,
-});
+const queryClient = new QueryClient();
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
-    <WagmiConfig config={config}>
-      <RainbowKitProvider chains={chains}>
-        <ApolloProvider client={client}>
-          <Component {...pageProps} />
-        </ApolloProvider>
-      </RainbowKitProvider>
-    </WagmiConfig>
+    <WagmiProvider config={config}>
+      <QueryClientProvider client={queryClient}>
+        <RainbowKitProvider>
+          <ApolloProvider client={client}>
+            <Component {...pageProps} />
+          </ApolloProvider>
+        </RainbowKitProvider>
+      </QueryClientProvider>
+    </WagmiProvider>
   );
 }

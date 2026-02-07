@@ -1,0 +1,31 @@
+
+> frontend@1.0.0 build
+> next build
+
+  ▲ Next.js 14.2.35
+
+   Linting and checking validity of types ...
+Failed to compile.
+
+./pages/_app.tsx:32:6
+Type error: 'WagmiProvider' cannot be used as a JSX component.
+  Its type '(parameters: PropsWithChildren<WagmiProviderProps>) => FunctionComponentElement<PropsWithChildren<HydrateProps>>' is not a valid JSX element type.
+    Type '(parameters: PropsWithChildren<WagmiProviderProps>) => FunctionComponentElement<PropsWithChildren<HydrateProps>>' is not assignable to type '(props: any, deprecatedLegacyContext?: any) => ReactNode'.
+      Type 'FunctionComponentElement<PropsWithChildren<HydrateProps>>' is not assignable to type 'ReactNode'.
+        Property 'children' is missing in type 'FunctionComponentElement<PropsWithChildren<HydrateProps>>' but required in type 'ReactPortal'.
+
+[0m [90m 30 |[39m [36mexport[39m [36mdefault[39m [36mfunction[39m [33mApp[39m({ [33mComponent[39m[33m,[39m pageProps }[33m:[39m [33mAppProps[39m) {[0m
+[0m [90m 31 |[39m   [36mreturn[39m ([0m
+[0m[31m[1m>[22m[39m[90m 32 |[39m     [33m<[39m[33mWagmiProvider[39m config[33m=[39m{config}[33m>[39m[0m
+[0m [90m    |[39m      [31m[1m^[22m[39m[0m
+[0m [90m 33 |[39m       [33m<[39m[33mQueryClientProvider[39m client[33m=[39m{queryClient}[33m>[39m[0m
+[0m [90m 34 |[39m         [33m<[39m[33mRainbowKitProvider[39m[33m>[39m[0m
+[0m [90m 35 |[39m           [33m<[39m[33mApolloProvider[39m client[33m=[39m{client}[33m>[39m[0m
+Next.js build worker exited with code: 1 and signal: null
+npm error Lifecycle script `build` failed with error:
+npm error code 1
+npm error path D:\Documents\Swanandi_Projects\soft_settle\packages\frontend
+npm error workspace frontend@1.0.0
+npm error location D:\Documents\Swanandi_Projects\soft_settle\packages\frontend
+npm error command failed
+npm error command C:\WINDOWS\system32\cmd.exe /d /s /c next build
