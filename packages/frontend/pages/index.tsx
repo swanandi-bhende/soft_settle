@@ -1,57 +1,47 @@
-// pages/index.tsx
-
-import { useState } from 'react';
-import { ethers } from 'ethers';
+// packages/frontend/pages/index.tsx
 import { motion } from 'framer-motion';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useAccount } from 'wagmi';
+import Link from 'next/link';
 
 export default function Home() {
-  const [account, setAccount] = useState<string | null>(null);
-
-  const connectWallet = async () => {
-    if ((window as any).ethereum) {
-      const provider = new ethers.BrowserProvider((window as any).ethereum);
-      const signer = await provider.getSigner();
-      setAccount(await signer.getAddress());
-    } else {
-      alert('Please install MetaMask or another Ethereum wallet.');
-    }
-  };
+  const { address, isConnected } = useAccount();
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white selection:bg-blue-500">
       
       {/* Animated Title */}
       <motion.h1
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="text-7xl font-extrabold bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent mb-4"
+        className="text-7xl font-extrabold bg-gradient-to-r from-blue-400 via-purple-500 to-blue-600 bg-clip-text text-transparent mb-4"
       >
         Soft-Settle
       </motion.h1>
 
-      {/* Subtitle */}
-      <p className="mt-2 text-gray-400 text-xl text-center max-w-2xl">
-        High-speed Micro-Credit Layer for AI Agents. Settle thousands of AI transactions for pennies.
+      <p className="mt-2 text-gray-400 text-xl text-center max-w-2xl font-light">
+        High-speed <span className="text-blue-400">Micro-Credit</span> Layer for AI Agents. 
+        Settle thousands of transactions for pennies.
       </p>
 
-      {/* Wallet Connection */}
-      <div className="mt-10">
-        {!account ? (
-          <button
-            onClick={connectWallet}
-            className="px-8 py-4 bg-blue-600 text-white font-bold rounded-full hover:bg-blue-700 transition-all shadow-xl"
-          >
-            Connect Agent Wallet
-          </button>
+      {/* Wallet Connection Section */}
+      <div className="mt-12 p-6 border border-white/10 rounded-3xl bg-white/5 backdrop-blur-sm">
+        {!isConnected ? (
+          <div className="flex flex-col items-center gap-4">
+             <p className="text-sm text-gray-500 uppercase tracking-widest">Authorize Agent</p>
+             <ConnectButton label="Connect MetaMask" showBalance={false} />
+          </div>
         ) : (
           <div className="text-center">
-            <p className="mb-4 text-green-500 font-mono">Connected: {account}</p>
-            <a
+            <p className="mb-6 text-green-400 font-mono text-sm">
+              Vault Active: {address?.slice(0, 6)}...{address?.slice(-4)}
+            </p>
+            <Link 
               href="/dashboard"
-              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full text-black font-semibold hover:opacity-90 transition"
+              className="px-10 py-4 bg-white text-black font-bold rounded-full hover:scale-105 transition-transform inline-block"
             >
               Enter Dashboard
-            </a>
+            </Link>
           </div>
         )}
       </div>

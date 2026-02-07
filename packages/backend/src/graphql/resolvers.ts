@@ -1,24 +1,24 @@
-// packages/backend/src/resolvers.ts
-
+// packages/backend/src/graphql/resolvers.ts
 import { ethers } from 'ethers';
-import { Agent } from '../models/Agent';
-import { Session } from '../models/Session';
 import { PubSub } from 'graphql-subscriptions';
-import { logToIPFS } from '../integrations/ipfs'; // IPFS logging utility
+import { Redis } from 'ioredis'; 
+import { logToIPFS } from '../integrations/ipfs';
 
-// Use require for json2csv to avoid missing types
-const { Parser } = require('json2csv');
-
-// Initialize PubSub for subscriptions
 const pubsub = new PubSub();
+const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
 
 export const resolvers = {
   Query: {
     getAgent: async (_: any, { domain }: { domain: string }) => {
-      return await Agent.findOne({ ensDomain: domain });
+      const data = await redis.get(`agent:${domain}`);
+      return data ? JSON.parse(data) : null;
     },
 
-    activeSessions: async () => await Session.find({ status: 'active' }),
+    activeSessions: async () => {
+      const keys = await redis.keys('session:*');
+      const sessions = await Promise.all(keys.map(async (k) => JSON.parse((await redis.get(k))!)));
+      return sessions.filter(s => s.status === 'active');
+    },
   },
 
   Mutation: {
@@ -26,72 +26,49 @@ export const resolvers = {
       const message = `Register Soft-Settle Agent: ${domain}`;
       const recoveredAddress = ethers.verifyMessage(message, sig);
 
-      const agent = await Agent.findOneAndUpdate(
-        { ensDomain: domain },
-        { ensDomain: domain, description, walletAddress: recoveredAddress },
-        { upsert: true, new: true }
-      );
+      const agentData = {
+        ensDomain: domain,
+        description,
+        walletAddress: recoveredAddress,
+        createdAt: new Date().toISOString()
+      };
 
-      return agent;
+      await redis.set(`agent:${domain}`, JSON.stringify(agentData));
+      return agentData;
     },
 
     updateOffChainState: async (_: any, { sessionId, newBalance }: any) => {
-      await Session.findByIdAndUpdate(sessionId, { balance: newBalance });
+      const sessionData = await redis.get(`session:${sessionId}`);
+      if (!sessionData) throw new Error("Session not found");
+
+      const session = JSON.parse(sessionData);
+      session.balance = newBalance;
+      
+      await redis.set(`session:${sessionId}`, JSON.stringify(session));
 
       pubsub.publish('SESSION_UPDATED', {
         sessionProgress: { sessionId, newBalance },
       });
 
-      pubsub.publish(`SESSION_${sessionId}`, {
-        sessionUpdated: { id: sessionId, balance: newBalance, status: 'active' },
-      });
-
       return true;
     },
 
-    updateSessionState: async (_: any, { sessionId, balance }: any) => {
-      const updated = { id: sessionId, balance, status: 'active' };
-      pubsub.publish(`SESSION_${sessionId}`, { sessionUpdated: updated });
-      return updated;
-    },
-
     disputeSession: async (_: any, { sessionId, reason }: { sessionId: string; reason: string }) => {
-      const session = await Session.findOneAndUpdate(
-        { sessionId },
-        { status: 'disputed' },
-        { new: true }
-      );
+      const sessionData = await redis.get(`session:${sessionId}`);
+      if (!sessionData) throw new Error("Session not found");
 
-      if (!session) throw new Error("Session not found");
-
-      // Log dispute event for audit trail
+      const session = JSON.parse(sessionData);
+      session.status = 'disputed';
       session.logs.push({ timestamp: new Date(), event: `DISPUTE: ${reason}` });
-      await session.save();
 
+      await redis.set(`session:${sessionId}`, JSON.stringify(session));
       return session;
-    },
-
-    exportReport: async (_: any, { sessionId }: { sessionId: string }) => {
-      const session = await Session.findOne({ sessionId });
-      if (!session) throw new Error("Session not found");
-
-      const json2csvParser = new Parser();
-      const csv = json2csvParser.parse(session.logs);
-
-      const ipfsHash = await logToIPFS({ sessionId, csv, finalizedAt: new Date() });
-
-      return { hash: ipfsHash, data: csv };
     },
   },
 
   Subscription: {
     sessionProgress: {
       subscribe: () => pubsub.asyncIterator(['SESSION_UPDATED']),
-    },
-
-    sessionUpdated: {
-      subscribe: (_: any, { sessionId }: { sessionId: string }) =>
-        pubsub.asyncIterator([`SESSION_${sessionId}`]),
     },
   },
 };

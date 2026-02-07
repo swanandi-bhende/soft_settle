@@ -1,28 +1,23 @@
+// packages/frontend/pages/_app.tsx
 import '@/styles/globals.css';
 import type { AppProps } from 'next/app';
-
 import { ApolloProvider } from '@apollo/client/react';
 import { client } from '../lib/apollo';
 
-import { WagmiProvider } from 'wagmi';
-import { mainnet } from 'wagmi/chains';
-import { http } from 'wagmi';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-
-import {
-  RainbowKitProvider,
-  getDefaultConfig,
-} from '@rainbow-me/rainbowkit';
 import '@rainbow-me/rainbowkit/styles.css';
+import { getDefaultConfig, RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit';
+import { WagmiProvider, http } from 'wagmi';
+import { polygonAmoy } from 'wagmi/chains';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const config = getDefaultConfig({
   appName: 'Soft-Settle',
-  projectId: 'YOUR_WALLETCONNECT_PROJECT_ID',
-  chains: [mainnet],
+  projectId: 'YOUR_WALLETCONNECT_PROJECT_ID', // Required for RainbowKit/Wagmi
+  chains: [polygonAmoy],
   transports: {
-    [mainnet.id]: http(),
+    [polygonAmoy.id]: http(),
   },
-  ssr: true, // If using Next.js
+  ssr: true,
 });
 
 const queryClient = new QueryClient();
@@ -31,7 +26,7 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider>
+        <RainbowKitProvider theme={darkTheme()} coolMode>
           <ApolloProvider client={client}>
             <Component {...pageProps} />
           </ApolloProvider>
