@@ -1,8 +1,11 @@
+// hardhat.config.ts
+import { defineConfig, configVariable } from "hardhat/config";
 import hardhatToolboxViemPlugin from "@nomicfoundation/hardhat-toolbox-viem";
-import { configVariable, defineConfig } from "hardhat/config";
+import "dotenv/config";
 
 export default defineConfig({
   plugins: [hardhatToolboxViemPlugin],
+
   solidity: {
     profiles: {
       default: {
@@ -19,7 +22,9 @@ export default defineConfig({
       },
     },
   },
+
   networks: {
+    // Hardhat simulated networks
     hardhatMainnet: {
       type: "edr-simulated",
       chainType: "l1",
@@ -28,11 +33,19 @@ export default defineConfig({
       type: "edr-simulated",
       chainType: "op",
     },
+
+    // Public testnets
     sepolia: {
       type: "http",
       chainType: "l1",
       url: configVariable("SEPOLIA_RPC_URL"),
       accounts: [configVariable("SEPOLIA_PRIVATE_KEY")],
+    },
+
+    amoy: {
+      type: "http",
+      url: configVariable("AMOY_RPC_URL"),
+      accounts: [configVariable("PRIVATE_KEY")],
     },
   },
 });

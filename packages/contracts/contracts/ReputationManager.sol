@@ -32,7 +32,7 @@ contract ReputationManager is Ownable {
 
         // Simple scoring: Start at 500. Success +10, Failure -50.
         string memory currentScoreStr = ensResolver.text(node, "vnd.soft-settle.score");
-        uint256 currentScore = _parseUint(currentScoreStr == "" ? "500" : currentScoreStr);
+        uint256 currentScore = _parseUint(bytes(currentScoreStr).length == 0 ? "500" : currentScoreStr);
         
         uint256 newScore = success ? currentScore + 10 : (currentScore > 50 ? currentScore - 50 : 0);
         

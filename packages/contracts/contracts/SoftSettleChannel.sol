@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@erc7824/nitrolite/contracts/NitroliteCore.sol";
+import "./NitroliteCore.sol";
 
 interface IReputationManager {
     function updateReputation(

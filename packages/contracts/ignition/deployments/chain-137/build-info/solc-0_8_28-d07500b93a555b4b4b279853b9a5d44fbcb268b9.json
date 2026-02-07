@@ -1,0 +1,47 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_28-d07500b93a555b4b4b279853b9a5d44fbcb268b9",
+  "solcVersion": "0.8.28",
+  "solcLongVersion": "0.8.28+commit.7893614a",
+  "userSourceNameMap": {
+    "contracts/ReputationManager.sol": "project/contracts/ReputationManager.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "cancun",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode",
+            "evm.deployedBytecode",
+            "evm.methodIdentifiers",
+            "metadata"
+          ]
+        }
+      },
+      "remappings": [
+        "project/:@openzeppelin/contracts/=npm/@openzeppelin/contracts@5.4.0/"
+      ]
+    },
+    "sources": {
+      "npm/@openzeppelin/contracts@5.4.0/access/Ownable.sol": {
+        "content": "// SPDX-License-Identifier: MIT\n// OpenZeppelin Contracts (last updated v5.0.0) (access/Ownable.sol)\n\npragma solidity ^0.8.20;\n\nimport {Context} from \"../utils/Context.sol\";\n\n/**\n * @dev Contract module which provides a basic access control mechanism, where\n * there is an account (an owner) that can be granted exclusive access to\n * specific functions.\n *\n * The initial owner is set to the address provided by the deployer. This can\n * later be changed with {transferOwnership}.\n *\n * This module is used through inheritance. It will make available the modifier\n * `onlyOwner`, which can be applied to your functions to restrict their use to\n * the owner.\n */\nabstract contract Ownable is Context {\n    address private _owner;\n\n    /**\n     * @dev The caller account is not authorized to perform an operation.\n     */\n    error OwnableUnauthorizedAccount(address account);\n\n    /**\n     * @dev The owner is not a valid owner account. (eg. `address(0)`)\n     */\n    error OwnableInvalidOwner(address owner);\n\n    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);\n\n    /**\n     * @dev Initializes the contract setting the address provided by the deployer as the initial owner.\n     */\n    constructor(address initialOwner) {\n        if (initialOwner == address(0)) {\n            revert OwnableInvalidOwner(address(0));\n        }\n        _transferOwnership(initialOwner);\n    }\n\n    /**\n     * @dev Throws if called by any account other than the owner.\n     */\n    modifier onlyOwner() {\n        _checkOwner();\n        _;\n    }\n\n    /**\n     * @dev Returns the address of the current owner.\n     */\n    function owner() public view virtual returns (address) {\n        return _owner;\n    }\n\n    /**\n     * @dev Throws if the sender is not the owner.\n     */\n    function _checkOwner() internal view virtual {\n        if (owner() != _msgSender()) {\n            revert OwnableUnauthorizedAccount(_msgSender());\n        }\n    }\n\n    /**\n     * @dev Leaves the contract without owner. It will not be possible to call\n     * `onlyOwner` functions. Can only be called by the current owner.\n     *\n     * NOTE: Renouncing ownership will leave the contract without an owner,\n     * thereby disabling any functionality that is only available to the owner.\n     */\n    function renounceOwnership() public virtual onlyOwner {\n        _transferOwnership(address(0));\n    }\n\n    /**\n     * @dev Transfers ownership of the contract to a new account (`newOwner`).\n     * Can only be called by the current owner.\n     */\n    function transferOwnership(address newOwner) public virtual onlyOwner {\n        if (newOwner == address(0)) {\n            revert OwnableInvalidOwner(address(0));\n        }\n        _transferOwnership(newOwner);\n    }\n\n    /**\n     * @dev Transfers ownership of the contract to a new account (`newOwner`).\n     * Internal function without access restriction.\n     */\n    function _transferOwnership(address newOwner) internal virtual {\n        address oldOwner = _owner;\n        _owner = newOwner;\n        emit OwnershipTransferred(oldOwner, newOwner);\n    }\n}\n"
+      },
+      "npm/@openzeppelin/contracts@5.4.0/utils/Context.sol": {
+        "content": "// SPDX-License-Identifier: MIT\n// OpenZeppelin Contracts (last updated v5.0.1) (utils/Context.sol)\n\npragma solidity ^0.8.20;\n\n/**\n * @dev Provides information about the current execution context, including the\n * sender of the transaction and its data. While these are generally available\n * via msg.sender and msg.data, they should not be accessed in such a direct\n * manner, since when dealing with meta-transactions the account sending and\n * paying for execution may not be the actual sender (as far as an application\n * is concerned).\n *\n * This contract is only required for intermediate, library-like contracts.\n */\nabstract contract Context {\n    function _msgSender() internal view virtual returns (address) {\n        return msg.sender;\n    }\n\n    function _msgData() internal view virtual returns (bytes calldata) {\n        return msg.data;\n    }\n\n    function _contextSuffixLength() internal view virtual returns (uint256) {\n        return 0;\n    }\n}\n"
+      },
+      "project/contracts/ReputationManager.sol": {
+        "content": "// SPDX-License-Identifier: MIT\r\npragma solidity ^0.8.24;\r\n\r\nimport \"@openzeppelin/contracts/access/Ownable.sol\";\r\n\r\ninterface IENSResolver {\r\n    function text(bytes32 node, string calldata key) external view returns (string memory);\r\n    function setText(bytes32 node, string calldata key, string calldata value) external;\r\n}\r\n\r\ncontract ReputationManager is Ownable {\r\n    IENSResolver public ensResolver;\r\n    address public authorizedChannel;\r\n\r\n    event ReputationUpdated(bytes32 indexed node, uint256 newScore);\r\n\r\n    constructor(address _ensResolver) Ownable(msg.sender) {\r\n        ensResolver = IENSResolver(_ensResolver);\r\n    }\r\n\r\n    function setChannel(address _channel) external onlyOwner {\r\n        authorizedChannel = _channel;\r\n    }\r\n\r\n    /**\r\n     * @notice Updates the credit score record on ENS.\r\n     * @param node The ENS namehash of the agent.\r\n     * @param success Whether the micro-credit session settled without deficit.\r\n     */\r\n    function processSettlement(bytes32 node, bool success) external {\r\n        require(msg.sender == authorizedChannel, \"Unauthorized\");\r\n\r\n        // Simple scoring: Start at 500. Success +10, Failure -50.\r\n        string memory currentScoreStr = ensResolver.text(node, \"vnd.soft-settle.score\");\r\n        uint256 currentScore = _parseUint(bytes(currentScoreStr).length == 0 ? \"500\" : currentScoreStr);\r\n        \r\n        uint256 newScore = success ? currentScore + 10 : (currentScore > 50 ? currentScore - 50 : 0);\r\n        \r\n        ensResolver.setText(node, \"vnd.soft-settle.score\", _uintToStr(newScore));\r\n        emit ReputationUpdated(node, newScore);\r\n    }\r\n\r\n    // Helper: string to uint\r\n    function _parseUint(string memory s) internal pure returns (uint256) {\r\n        bytes memory b = bytes(s);\r\n        uint256 result = 0;\r\n        for (uint256 i = 0; i < b.length; i++) {\r\n            if (uint8(b[i]) >= 48 && uint8(b[i]) <= 57) {\r\n                result = result * 10 + (uint8(b[i]) - 48);\r\n            }\r\n        }\r\n        return result;\r\n    }\r\n\r\n    // Helper: uint to string\r\n    function _uintToStr(uint256 _i) internal pure returns (string memory) {\r\n        if (_i == 0) return \"0\";\r\n        uint256 j = _i;\r\n        uint256 len;\r\n        while (j != 0) { len++; j /= 10; }\r\n        bytes memory bstr = new bytes(len);\r\n        uint256 k = len;\r\n        while (_i != 0) {\r\n            k = k - 1;\r\n            uint8 temp = (48 + uint8(_i - _i / 10 * 10));\r\n            bstr[k] = bytes1(temp);\r\n            _i /= 10;\r\n        }\r\n        return string(bstr);\r\n    }\r\n}"
+      }
+    }
+  }
+}
