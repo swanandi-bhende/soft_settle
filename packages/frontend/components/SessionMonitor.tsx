@@ -11,20 +11,41 @@ export default function SessionMonitor({ sessionData }: { sessionData: any }) {
   }, [sessionData]);
 
   return (
-    <div className="p-8 bg-gray-800/50 backdrop-blur-md rounded-2xl shadow-lg border border-gray-700">
-      <div className="flex justify-between mb-4 text-base text-gray-300">
-        <span>Credit Usage</span>
-        <span>{progress.toFixed(1)}%</span>
+    <motion.div 
+      whileHover={{ translateY: -2 }}
+      className="p-6 rounded-xl bg-gradient-to-br from-slate-800/60 to-slate-700/40 border border-slate-700 backdrop-blur-sm transition-all duration-300 hover:border-blue-500/30"
+    >
+      <div className="flex justify-between items-center mb-4">
+        <span className="text-sm font-medium text-slate-300 flex items-center gap-2">
+          <span className="w-3 h-3 bg-green-400 rounded-full animate-pulse" />
+          Credit Usage
+        </span>
+        <span className="text-sm font-semibold text-white font-mono">{progress.toFixed(1)}%</span>
       </div>
-      <div className="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
+
+      <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden mb-4">
         <motion.div 
-          className="bg-blue-500 h-3 rounded-full"
+          className="h-full bg-gradient-to-r from-green-500 to-blue-500"
           initial={{ width: 0 }}
           animate={{ width: `${progress}%` }}
           transition={{ duration: 0.5 }}
         />
       </div>
-      <p className="mt-6 text-sm text-gray-400">Session ID: {sessionData.sessionId}</p>
-    </div>
+
+      <div className="grid grid-cols-2 gap-3 mb-4 pt-4 border-t border-slate-700">
+        <div>
+          <p className="text-xs text-slate-500 mb-1">Deposit</p>
+          <p className="text-lg font-semibold text-white">${sessionData.deposit}</p>
+        </div>
+        <div>
+          <p className="text-xs text-slate-500 mb-1">Used</p>
+          <p className="text-lg font-semibold text-white">${sessionData.currentBalance}</p>
+        </div>
+      </div>
+
+      <p className="text-xs text-slate-500 font-mono">
+        Session ID: {sessionData.sessionId?.slice(0, 16)}...
+      </p>
+    </motion.div>
   );
 }
