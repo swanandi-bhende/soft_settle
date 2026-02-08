@@ -38,7 +38,7 @@ async function startServer() {
     const server = new apollo_server_express_1.ApolloServer({ schema });
     (0, ws_2.useServer)({ schema }, wsServer);
     await server.start();
-    server.applyMiddleware({ app });
+    server.applyMiddleware({ app: app });
     // Health check endpoint
     app.get('/health', (req, res) => {
         res.json({ status: 'ok' });

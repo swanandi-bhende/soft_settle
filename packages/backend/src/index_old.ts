@@ -42,7 +42,7 @@ async function startServer() {
   useServer({ schema }, wsServer);
 
   await server.start();
-  server.applyMiddleware({ app });
+  server.applyMiddleware({ app: app as any });
 
   // Health check endpoint
   app.get('/health', (req, res) => {
