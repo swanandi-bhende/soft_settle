@@ -1,4 +1,5 @@
 // packages/frontend/pages/index.tsx
+"use client";
 import { motion } from 'framer-motion';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';

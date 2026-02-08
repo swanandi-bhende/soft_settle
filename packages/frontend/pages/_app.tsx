@@ -7,15 +7,15 @@ import { client } from '../lib/apollo';
 import '@rainbow-me/rainbowkit/styles.css';
 import { getDefaultConfig, RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit';
 import { WagmiProvider, http } from 'wagmi';
-import { polygonAmoy } from 'wagmi/chains';
+import { sepolia } from 'wagmi/chains'; // Switched to Sepolia
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const config = getDefaultConfig({
   appName: 'Soft-Settle',
-  projectId: 'YOUR_WALLETCONNECT_PROJECT_ID', // Required for RainbowKit/Wagmi
-  chains: [polygonAmoy],
+  projectId: '00000000000000000000000000000000', // Dummy ID for RainbowKit internal logic
+  chains: [sepolia], // Only Sepolia
   transports: {
-    [polygonAmoy.id]: http(),
+    [sepolia.id]: http(),
   },
   ssr: true,
 });

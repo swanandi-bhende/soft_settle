@@ -11,6 +11,6 @@
 
 #!.yarn/cache
 .pnp.*
-
+.next/
 .env
 node_modules/
