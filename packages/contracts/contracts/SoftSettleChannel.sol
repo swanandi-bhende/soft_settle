@@ -5,11 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./NitroliteCore.sol";
 
 interface IReputationManager {
-    function updateReputation(
-        address consumerNode,
-        bool successful,
-        uint256 transferred
-    ) external;
+    function processSettlement(bytes32 node, bool success) external;
 }
 
 contract SoftSettleChannel is NitroliteCore {
@@ -18,13 +14,13 @@ contract SoftSettleChannel is NitroliteCore {
 
     struct Session {
         address consumer;
+        bytes32 ensNode; // The namehash of the agent's ENS name
         uint256 balance;
         bool active;
     }
 
     mapping(bytes32 => Session) public sessions;
 
-    // Events
     event SessionClosed(bytes32 indexed sessionId, bool successful, uint256 transferred);
     event DeficitDetected(address indexed consumer, uint256 deficit);
 
@@ -33,52 +29,35 @@ contract SoftSettleChannel is NitroliteCore {
         reputationManager = IReputationManager(_reputationManager);
     }
 
-    /// @notice Deposit USDC as collateral
-    function depositCollateral(uint256 amount) external {
-        usdc.transferFrom(msg.sender, address(this), amount);
-    }
-
-    /// @notice Open a session (optional helper)
-    function openSession(bytes32 sessionId, address consumer, uint256 deposit) external {
+    function openSession(bytes32 sessionId, address consumer, bytes32 ensNode, uint256 deposit) external {
+        // In production, NitroliteCore logic would handle the actual USDC lock logic
         sessions[sessionId] = Session({
             consumer: consumer,
+            ensNode: ensNode,
             balance: deposit,
             active: true
         });
+        emit SessionStarted(sessionId, consumer, deposit);
     }
 
-    /**
-     * @notice Called when both parties mutually close the session
-     * @param sessionId Unique session identifier
-     * @param finalTransferred Amount settled at the end of session
-     */
-    function closeSessionMutual(
-        bytes32 sessionId,
-        uint256 finalTransferred
-    ) external {
+    function closeSessionMutual(bytes32 sessionId, uint256 finalTransferred) external {
         Session storage session = sessions[sessionId];
         require(session.active, "Session inactive");
 
-        uint256 balance = usdc.balanceOf(address(this));
+        uint256 availableBalance = usdc.balanceOf(address(this));
         bool successful = true;
 
-        // Deficit detection
-        if (finalTransferred > balance) {
-            uint256 deficit = finalTransferred - balance;
-            emit DeficitDetected(session.consumer, deficit);
+        if (finalTransferred > availableBalance) {
+            emit DeficitDetected(session.consumer, finalTransferred - availableBalance);
             successful = false;
         }
 
-        // Update reputation
-        reputationManager.updateReputation(session.consumer, successful, finalTransferred);
+        // Trigger Reputation Update
+        reputationManager.processSettlement(session.ensNode, successful);
 
-        // Mark session closed
         session.active = false;
-
-        // Emit session closed event
         emit SessionClosed(sessionId, successful, finalTransferred);
-
-        // Call parent NitroliteCore logic
-        super.closeSessionMutual(session.consumer, finalTransferred);
+        
+        super._closeSessionMutual(session.consumer, finalTransferred);
     }
 }

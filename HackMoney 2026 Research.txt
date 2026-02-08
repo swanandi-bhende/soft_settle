@@ -1,0 +1,156 @@
+Yellow
+$15,000
+About
+
+Yellow Network lets you deposit crypto once and make lightning-fast transactions without waiting for blockchain confirmations or paying gas each time. It combines the best of both worlds — the speed of off-chain systems and the security of smart contracts.
+Most interactions between parties don't need immediate on-chain settlement. Consider a chess game with a 10 USDC wager:
+- On-chain approach: Every move requires a transaction → 40+ transactions → $100s in fees.
+- State channel approach: Lock funds once, play off-chain, settle once → 2 transactions → minimal fees.
+State channels let you execute unlimited off-chain operations between on-chain checkpoints.
+
+How it works:
+When you send funds or interact with an app, your transfers happen off-chain through a secure network of Yellow nodes that keep balances in sync. It feels instant, like using a regular web2 app. Smart contracts on each blockchain act as safes: they hold your deposit, verify everything, and make sure your money is protected. If you ever stop using the app or want to withdraw, your final balance is settled on-chain. Your session is protected by unique digital keys that only you control. No one can change your balance or take your funds. Even if something goes wrong, your assets automatically return to you.
+
+Key features:
+- Works as a Layer-2 network, not a new blockchain.
+- Enables real-time, gasless payments that still settle safely on your preferred chain.
+- Designed for games, apps, and tools that need instant user actions and smooth UX.
+- Includes built-in liquidity pools to make sure there’s always capital available for fast transactions.
+- Compatible with all EVM chains, Solana and others coming soon.
+
+
+
+
+
+
+Prizes
+
+Integrate Yellow SDK: Trading apps/Prediction markets/Marketplaces ⸺ $15,000
+1st place $5,000, 2nd place $3,000, 3rd place $2,000, 4th place $1,000 ×3, 5th place $500 ×4.
+
+Use the Yellow SDK and Nitrolite protocol to build a mini-app or feature that showcases instant, session-based transactions - all happening off-chain and settling on-chain when needed.
+How to participate
+- Integrate the Yellow SDK, connect to the Nitrolite test environment and create a wallet session.
+- Implement off-chain logic: simulate sending or spending assets instantly between users or in-app actions.
+- Show on-chain settlement: finalize balances through smart-contract calls when users end their session.
+
+Example App Ideas
+- Trading apps
+- Prediction market apps
+- Tipping System: users send 0.01 USDC per like, emoji, or message without gas or delay.
+- Pay-Per-Use App: charge users per API call, minute, or read action - settle once at the end of session.
+- Cross-App Wallet: one balance shared across multiple dApps (browser plugin, Telegram mini-app, etc.).
+
+Why Build on Yellow
+- Gas-free & instant: off-chain state channels = Web2 speed, Web3 security.
+- Session-based logic: define allowances for in-game or in-app use.
+- Multi-chain ready: works with all EVM chains; Solana support coming soon.
+
+
+Qualification Requirements
+Qualification Requirements - to qualify for the Yellow Network Prize, your project must:
+- Use the Yellow SDK / Nitrolite protocol in your submission.
+- Demonstrate off-chain transaction logic — e.g., instant payments, session-based spending, or settlement finalized via smart contracts.
+- Deploy or simulate a working prototype showing how Yellow improves transaction speed, UX, or efficiency.
+- Include a 2–3 minute demo video showing your integration and user flow.
+- Submit your project under the “Yellow Network” prize track on ETHGlobal and include a repo link.
+
+Judging Criteria
+Projects will be evaluated based on:
+- Problem & Solution: clarity of the problem addressed and creativity of the solution.
+- Yellow SDK Integration: depth and impact of integration with Yellow technology.
+- Business Model: clarity and sustainability of the project’s value or revenue model.
+- Presentation: ability to communicate the idea clearly and persuasively.
+- Team Potential: team’s skill, passion, and commitment to continue post-hackathon.
+
+Links and Resources
+https://www.youtube.com/playlist?list=PL5Uk-e9pgXVldFAweILUcZjvaceTlgkKa
+https://yellow.com/apps
+https://docs.yellow.org/docs/learn/
+
+Arc
+$10,000
+About
+Arc is the purpose-built L1 blockchain from Circle, EVM-compatible, and serves as the Economic OS for the internet — powering the programmable trust layer and transaction engine where capital, humans, and machines coordinate to drive real economic growth. Arc enables builders and issuers worldwide to power the next era of onchain lending, capital markets, FX, and payments - igniting liquidity across currencies and asset classes.
+
+Prizes
+Best Chain Abstracted USDC Apps Using Arc as a Liquidity Hub ⸺ $5,000
+1st place $2,500, 2nd place $2,500
+Build apps that treat multiple chains as one liquidity surface, using Arc to move USDC wherever it’s needed. Projects should demonstrate how capital can be sourced, routed, and settled across chains without fragmenting user experience.
+What we’re looking for:
+-Crosschain payments, credit, or treasury systems
+-Applications that are not locked to a single chain
+-Seamless user experience despite crosschain complexity
+Qualification Requirements
+CIRCLE TOOLS REQUIRED: Arc, Circle Gateway, USDC, Circle Wallets
+Submissions will be evaluated based on the following parameters. Please be clear what bounty you are submitting for as a part of your submission!
+* Functional MVP and diagram: Projects must demonstrate a working frontend and backend plus an architecture diagram.
+* Product feedback - clear and actionable feedback will heavily influence the judgement of your submission
+* Video demonstration + presentation: Succinctly outlining the project's core functions and its effective use of Circle's Developer tools/tech is required, supported by detailed documentation.
+* Link to GitHub/Replit repo
+
+Build Global Payouts and Treasury Systems with USDC on Arc ⸺ $2,500
+Build payout or treasury systems that move USDC globally, automatically, and reliably. Projects should show how onchain infrastructure can support real-world financial operations like payroll, revenue distribution, or fund settlements.
+What we’re looking for:
+-Automated or agent-driven payout logic
+-Multi-recipient, multi-chain settlement
+-Treasury systems backed by RWAs
+-Policy-based or condition-based payouts
+Qualification Requirements
+CIRCLE TOOLS REQUIRED: Arc, Circle Gateway, Circle Wallets, Bridge Kit
+Submissions will be evaluated based on the following parameters. Please be clear what bounty you are submitting for as a part of your submission!
+* Functional MVP and diagram: Projects must demonstrate a working frontend and backend plus an architecture diagram.
+* Product feedback - clear and actionable feedback will heavily influence the judgement of your submission
+* Video demonstration + presentation: Succinctly outlining the project's core functions and its effective use of Circle's Developer tools/tech is required, supported by detailed documentation.
+* Link to GitHub/Replit repo
+
+Best Agentic Commerce App Powered by Real-World Assets on Arc ⸺ $2,500
+Build applications where autonomous agents use real-world assets as productive capital to power onchain commerce. Projects should showcase agents that can make decisions, execute transactions, and manage risk, all settled in USDC.
+What we’re looking for:
+-AI agents that borrow, repay, or rebalance against RWA collateral
+-Autonomous spending, payments, or treasury management
+-USDC-denominated credit or cash flow backed by RWAs
+-Clear agent decision logic tied to oracle or market signals
+Qualification Requirements
+REQUIRED TOOLS: Arc, USDC, Circle Wallets, Circle Contracts, Stork
+Qualification Requirements
+Submissions will be evaluated based on the following parameters. Please be clear what bounty you are submitting for as a part of your submission!
+* Functional MVP and diagram: Projects must demonstrate a working frontend and backend plus an architecture diagram.
+* Product feedback - clear and actionable feedback will heavily influence the judgement of your submission
+* Video demonstration + presentation: Succinctly outlining the project's core functions and its effective use of Circle's Developer tools/tech is required, supported by detailed documentation.
+* Link to GitHub/Replit repo
+
+Links and Resources
+https://developers.circle.com/gateway
+https://developers.circle.com/wallets
+https://developers.circle.com/bridge-kit
+https://developers.circle.com/contracts
+https://docs.stork.network/?_gl=1*ajrbya*_ga*MTE2MzIzNTE5Ny4xNzY5NjM3MTA3*_ga_NLZGMPEG3X*czE3Njk2MzcxMDYkbzEkZzEkdDE3Njk2MzcxMTYkajUxJGwwJGgw
+https://docs.arc.network/arc/concepts/welcome-to-arc
+https://console.circle.com/signup
+https://faucet.circle.com/
+https://docs.arc.network/arc/tutorials/transfer-usdc-or-eurc
+
+ENS
+$5,000
+About
+Decentralized naming for wallets, contracts, agents, websites and more. Replace 0x addresses with human-readable names. Leverage portable profiles, payment settings, and social features with ENS!
+
+Prizes
+Integrate ENS ⸺ $3,500
+Split evenly between all qualifying projects
+Any type of ENS integration is eligible for this pool prize, split evenly among all eligible projects. Get creative!
+Qualification Requirements
+You need to write some code specifically for ENS, even if it's just a couple wagmi hooks. Simply using Rainbowkit does not count. Your demo must be functional and not contain hard-coded values. Upon submission, your project showcase must have a video recording or link to a live demo (ideally both) and the code needs to be open source and accessible on Github or a similar platform.
+
+Most creative use of ENS for DeFi ⸺ $1,500
+ENS is often thought of as simple name <> address mapping, but really its much more flexible! Names can store arbitrary data via text records, decentralized websites via content hash and more.
+This prize goes to the most creative application of ENS in DeFi. This could be some sort of swap preferences stored in text records, DEX contracts that are named via ENS, decentralized interfaces or anything else.
+Qualification Requirements
+It should be obvious how ENS improves your product and is not just implemented as an afterthought. Your demo must be functional and not just include hard-coded values. Upon submission, your project showcase must have a video recording or link to a live demo (ideally both) and the code needs to be open source and accessible on Github or a similar platform.
+
+Links and Resources
+https://docs.ens.domains/web/records
+https://docs.ens.domains/dweb/intro
+https://docs.ens.domains
+
