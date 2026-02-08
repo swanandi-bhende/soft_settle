@@ -9,37 +9,35 @@ export default function Home() {
   const { address, isConnected } = useAccount();
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white selection:bg-blue-500">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 to-black text-white">
       
-      {/* Animated Title */}
       <motion.h1
-        initial={{ y: -20, opacity: 0 }}
+        initial={{ y: -30, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="text-7xl font-extrabold bg-gradient-to-r from-blue-400 via-purple-500 to-blue-600 bg-clip-text text-transparent mb-4"
+        transition={{ duration: 0.6 }}
+        className="text-7xl font-bold mb-6"
       >
         Soft-Settle
       </motion.h1>
 
-      <p className="mt-2 text-gray-400 text-xl text-center max-w-2xl font-light">
-        High-speed <span className="text-blue-400">Micro-Credit</span> Layer for AI Agents. 
-        Settle thousands of transactions for pennies.
+      <p className="text-xl text-gray-300 text-center max-w-3xl mb-12 px-4">
+        High-speed Micro-Credit Layer for AI Agents. Settle thousands of transactions for pennies.
       </p>
 
-      {/* Wallet Connection Section */}
-      <div className="mt-12 p-6 border border-white/10 rounded-3xl bg-white/5 backdrop-blur-sm">
+      <div className="p-8 bg-gray-800/50 backdrop-blur-md rounded-2xl shadow-lg border border-gray-700 max-w-md w-full">
         {!isConnected ? (
-          <div className="flex flex-col items-center gap-4">
-             <p className="text-sm text-gray-500 uppercase tracking-widest">Authorize Agent</p>
+          <div className="flex flex-col items-center gap-6">
+             <p className="text-sm text-gray-400 uppercase tracking-wider">Authorize Agent</p>
              <ConnectButton label="Connect MetaMask" showBalance={false} />
           </div>
         ) : (
           <div className="text-center">
-            <p className="mb-6 text-green-400 font-mono text-sm">
+            <p className="mb-6 text-green-400 font-mono text-base">
               Vault Active: {address?.slice(0, 6)}...{address?.slice(-4)}
             </p>
             <Link 
               href="/dashboard"
-              className="px-10 py-4 bg-white text-black font-bold rounded-full hover:scale-105 transition-transform inline-block"
+              className="px-12 py-4 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition duration-300"
             >
               Enter Dashboard
             </Link>

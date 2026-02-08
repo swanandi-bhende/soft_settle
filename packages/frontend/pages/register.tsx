@@ -1,3 +1,4 @@
+// packages/frontend/pages/register.tsx
 import { useState } from 'react';
 import { ethers } from 'ethers';
 import { gql } from '@apollo/client';
@@ -19,7 +20,6 @@ export default function RegisterAgent() {
   const handleRegister = async () => {
     if (!domain) return alert('Enter an ENS domain');
 
-    // Ensure wallet exists
     if (!(window as any).ethereum) {
       alert('MetaMask not found');
       return;
@@ -43,11 +43,11 @@ export default function RegisterAgent() {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-20 p-8 border rounded-xl shadow-2xl">
-      <h2 className="text-2xl font-bold mb-6">Register AI Agent</h2>
+    <div className="max-w-lg mx-auto mt-32 p-10 bg-gray-800/50 backdrop-blur-md rounded-2xl shadow-xl border border-gray-700">
+      <h2 className="text-3xl font-bold mb-8 text-white">Register AI Agent</h2>
 
       <input
-        className="w-full p-2 mb-4 border rounded"
+        className="w-full p-4 mb-6 bg-gray-900 text-white border border-gray-600 rounded-xl focus:outline-none focus:border-blue-500 transition duration-200"
         placeholder="agent-name.eth"
         value={domain}
         onChange={(e) => setDomain(e.target.value)}
@@ -56,13 +56,13 @@ export default function RegisterAgent() {
       <button
         onClick={handleRegister}
         disabled={loading}
-        className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+        className="w-full py-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 transition duration-300 font-medium"
       >
-        {loading ? 'Registering…' : 'Sign & Register'}
+        {loading ? 'Registering...' : 'Sign & Register'}
       </button>
 
       {error && (
-        <p className="mt-4 text-red-600 text-sm">
+        <p className="mt-4 text-red-500 text-sm">
           Error: {error.message}
         </p>
       )}

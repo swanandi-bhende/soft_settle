@@ -1,3 +1,4 @@
+// packages/frontend/pages/dashboard.tsx
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAccount } from 'wagmi';
@@ -23,7 +24,6 @@ interface Agent {
 interface Integration {
   name: string;
   status: string;
-  badge: string;
   color: string;
   description: string;
 }
@@ -38,47 +38,39 @@ export default function Dashboard() {
   const [registering, setRegistering] = useState(false);
   const [creating, setCreating] = useState(false);
 
-  // Fetch all data on mount + poll every 3s
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch sessions
         const sessResp = await fetch(`${BACKEND_URL}/api/sessions`);
         const sessData = await sessResp.json();
         const sessionsList = sessData.sessions || [];
-        // Simulate progress animation
         setSessions(sessionsList.map((s: any) => ({
           ...s,
           progress: Math.min(100, (s.progress || 0) + Math.random() * 15),
         })));
 
-        // Fetch agents
         const agentResp = await fetch(`${BACKEND_URL}/api/agents`);
         const agentData = await agentResp.json();
         setAgents(agentData.agents || []);
 
-        // Fetch integrations
         const intResp = await fetch(`${BACKEND_URL}/api/integrations`);
         const intData = await intResp.json();
         setIntegrations([
           {
             name: 'Yellow Network',
-            status: intData.yellow?.status || '✓ Configured',
-            badge: '💛',
+            status: intData.yellow?.status || 'Configured',
             color: 'yellow',
             description: intData.yellow?.feature || 'Nitrolite state channels',
           },
           {
             name: 'Circle/Arc',
-            status: intData.circle?.status || '✓ Configured',
-            badge: '💳',
+            status: intData.circle?.status || 'Configured',
             color: 'blue',
             description: intData.circle?.feature || 'USDC payouts',
           },
           {
             name: 'ENS',
-            status: intData.ens?.status || '✓ Configured',
-            badge: '🆔',
+            status: intData.ens?.status || 'Configured',
             color: 'purple',
             description: intData.ens?.feature || 'Credit scores',
           },
@@ -113,15 +105,14 @@ export default function Dashboard() {
       const data = await resp.json();
       if (data.success) {
         setNewAgent('');
-        alert('✅ Agent registered with ENS integration!');
-        // Refetch agents
+        alert('Agent registered with ENS integration!');
         const agentResp = await fetch(`${BACKEND_URL}/api/agents`);
         const agentData = await agentResp.json();
         setAgents(agentData.agents || []);
       }
     } catch (error) {
       console.error('Registration failed:', error);
-      alert('❌ Registration failed');
+      alert('Registration failed');
     } finally {
       setRegistering(false);
     }
@@ -141,226 +132,167 @@ export default function Dashboard() {
         body: JSON.stringify({
           consumerId: agents[0].agentId,
           providerId: agents[1].agentId,
-          collateralAmount: 100,
+          deposit: 50,
         }),
       });
 
       const data = await resp.json();
-      if (data.sessionId) {
-        alert(`✅ Session created: ${data.sessionId}`);
-        // Refetch sessions
+      if (data.success) {
+        alert('Session created!');
         const sessResp = await fetch(`${BACKEND_URL}/api/sessions`);
         const sessData = await sessResp.json();
         setSessions(sessData.sessions || []);
       }
     } catch (error) {
       console.error('Session creation failed:', error);
-      alert('❌ Failed to create session');
+      alert('Session creation failed');
     } finally {
       setCreating(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-black to-slate-900 text-white py-12 px-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black text-white p-16">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-5xl font-extrabold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-              SoftSettle MVP
-            </h1>
-            <p className="text-gray-400 mt-2">High-speed Micro-Credit Layer for AI Agents</p>
-          </div>
-          <Link href="/" className="px-6 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm">
-            Home
-          </Link>
-        </div>
+        <header className="mb-16">
+          <h1 className="text-5xl font-bold text-white">Dashboard</h1>
+          <p className="mt-3 text-lg text-gray-300">Manage your agents, sessions, and integrations seamlessly.</p>
+        </header>
 
-        {/* INTEGRATIONS STATUS PANEL */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-12 bg-gradient-to-r from-slate-800/50 to-slate-900/50 border border-white/10 rounded-2xl p-8 backdrop-blur"
-        >
-          <h2 className="text-2xl font-bold mb-6">🚀 Partnership Integrations</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {integrations.map((int) => (
-              <motion.div
-                key={int.name}
-                whileHover={{ scale: 1.02 }}
-                className={`p-6 rounded-xl border-2 border-${int.color}-500/30 bg-${int.color}-950/20 backdrop-blur`}
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-4xl">{int.badge}</span>
-                  <span className="text-xs font-bold px-3 py-1 bg-green-500/20 text-green-400 rounded-full">
-                    ✓ LIVE
-                  </span>
-                </div>
-                <h3 className="text-lg font-bold text-white mb-2">{int.name}</h3>
-                <p className="text-sm text-gray-400 mb-2">{int.description}</p>
-                <p className="text-xs text-gray-500">{int.status}</p>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* MAIN CONTENT GRID */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* LEFT: Register Agent (ENS Integration) */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="lg:col-span-1 bg-white/5 border border-white/10 rounded-2xl p-8 backdrop-blur"
-          >
-            <h2 className="text-2xl font-bold mb-2">🆔 Agent Registration</h2>
-            <p className="text-xs text-gray-400 mb-6">ENS Integration</p>
-
-            <div className="space-y-4 mb-6">
-              <div>
-                <label className="block text-sm text-gray-400 mb-2">Agent ID</label>
-                <input
-                  type="text"
-                  placeholder="alice.eth"
-                  value={newAgent}
-                  onChange={(e) => setNewAgent(e.target.value)}
-                  className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500"
-                />
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-10">
+          {/* Sidebar for Integrations and Registration */}
+          <div className="lg:col-span-1 space-y-10">
+            <section className="bg-gray-800/50 backdrop-blur-md p-8 rounded-2xl shadow-lg border border-gray-700">
+              <h2 className="text-2xl font-semibold mb-6 text-white">Partnership Integrations</h2>
+              <div className="space-y-6">
+                {integrations.map((int) => (
+                  <div key={int.name} className="flex justify-between items-center">
+                    <div>
+                      <p className="font-medium text-white">{int.name}</p>
+                      <p className="text-sm text-gray-400">{int.description}</p>
+                    </div>
+                    <span className={`px-4 py-1 rounded-full text-xs font-medium bg-${int.color}-900/30 text-${int.color}-400`}>
+                      {int.status}
+                    </span>
+                  </div>
+                ))}
               </div>
+              <button className="mt-8 w-full py-3 bg-gray-700 text-gray-300 rounded-xl hover:bg-gray-600 transition duration-300 text-sm font-medium">
+                + New Integration
+              </button>
+            </section>
+
+            <section className="bg-gray-800/50 backdrop-blur-md p-8 rounded-2xl shadow-lg border border-gray-700">
+              <h2 className="text-2xl font-semibold mb-6 text-white">Register Agent</h2>
+              <input
+                className="w-full p-4 mb-6 bg-gray-900 text-white border border-gray-600 rounded-xl focus:outline-none focus:border-blue-500 transition duration-200"
+                placeholder="agent-name.eth"
+                value={newAgent}
+                onChange={(e) => setNewAgent(e.target.value)}
+              />
               <button
                 onClick={handleRegisterAgent}
-                disabled={registering || !newAgent}
-                className="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 rounded-lg font-semibold transition"
+                disabled={registering || !address}
+                className="w-full py-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 transition duration-300 font-medium"
               >
                 {registering ? 'Registering...' : 'Register Agent'}
               </button>
-            </div>
+            </section>
+          </div>
 
-            {/* Agents List */}
-            <div className="border-t border-white/10 pt-6">
-              <h3 className="text-lg font-bold mb-4">Registered Agents</h3>
-              {agents.length === 0 ? (
-                <p className="text-sm text-gray-500">No agents yet</p>
+          {/* Main Content for Sessions */}
+          <div className="lg:col-span-3">
+            <section className="bg-gray-800/50 backdrop-blur-md p-8 rounded-2xl shadow-lg border border-gray-700">
+              <div className="flex justify-between items-center mb-8">
+                <h2 className="text-2xl font-semibold text-white">Active Sessions</h2>
+                <button
+                  onClick={handleInitSession}
+                  disabled={creating || agents.length < 2}
+                  className="px-6 py-3 bg-green-600 hover:bg-green-700 disabled:opacity-50 rounded-xl text-sm font-medium text-white transition duration-300"
+                >
+                  {creating ? 'Creating...' : '+ New Session'}
+                </button>
+              </div>
+
+              {loading ? (
+                <p className="text-gray-400 text-center py-12">Loading sessions...</p>
+              ) : sessions.length === 0 ? (
+                <div className="text-center py-16 bg-gray-900/50 border border-gray-700 rounded-2xl">
+                  <p className="text-gray-300 text-lg">No active sessions yet</p>
+                  <p className="text-sm text-gray-500 mt-3">
+                    Register at least two agents and create a session to begin
+                  </p>
+                </div>
               ) : (
-                <div className="space-y-2">
-                  {agents.map((agent) => (
+                <div className="space-y-8">
+                  {sessions.map((session) => (
                     <motion.div
-                      key={agent.agentId}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className="p-3 bg-white/10 border border-white/20 rounded-lg hover:bg-white/15 transition"
+                      key={session.sessionId}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5 }}
+                      className="bg-gray-900/50 border border-gray-700 rounded-2xl p-8"
                     >
-                      <p className="font-mono text-sm text-purple-400">{agent.agentId}</p>
-                      <p className="text-xs text-gray-400 mt-1">
-                        Score: {agent.creditScore || 500}
-                      </p>
+                      <div className="flex justify-between items-start mb-6">
+                        <div>
+                          <p className="font-mono text-sm text-gray-400">{session.sessionId}</p>
+                          <p className="text-xl font-semibold mt-2 text-white">
+                            {session.consumer} → {session.provider}
+                          </p>
+                        </div>
+                        <span
+                          className={`px-4 py-2 rounded-full text-sm font-medium ${
+                            session.status === 'active'
+                              ? 'bg-green-900/30 text-green-400'
+                              : session.status === 'settled'
+                              ? 'bg-blue-900/30 text-blue-400'
+                              : 'bg-red-900/30 text-red-400'
+                          }`}
+                        >
+                          {session.status.toUpperCase()}
+                        </span>
+                      </div>
+
+                      <div className="mb-6">
+                        <div className="flex justify-between text-sm text-gray-400 mb-3">
+                          <span>Settlement Progress</span>
+                          <span className="font-mono">{Math.round(session.progress)}%</span>
+                        </div>
+                        <div className="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${session.progress}%` }}
+                            className="h-full bg-gradient-to-r from-blue-500 to-purple-500"
+                            transition={{ duration: 0.8 }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-6 mb-6">
+                        <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
+                          <p className="text-sm text-gray-400 mb-2">Yellow Collateral</p>
+                          <p className="text-2xl font-semibold text-white">${session.collateral}</p>
+                        </div>
+                        <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
+                          <p className="text-sm text-gray-400 mb-2">Circle Balance</p>
+                          <p className="text-2xl font-semibold text-white">${session.offChainBalance}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap gap-3 pt-6 border-t border-gray-700">
+                        <span className="px-4 py-2 text-sm bg-yellow-900/30 text-yellow-400 rounded-full border border-yellow-700/50">
+                          Yellow Nitrolite Channel
+                        </span>
+                        <span className="px-4 py-2 text-sm bg-blue-900/30 text-blue-400 rounded-full border border-blue-700/50">
+                          Circle Arc USDC
+                        </span>
+                      </div>
                     </motion.div>
                   ))}
                 </div>
               )}
-            </div>
-          </motion.div>
-
-          {/* RIGHT: Sessions (Yellow + Circle Integration) */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="lg:col-span-2 space-y-6"
-          >
-            <div className="flex justify-between items-center">
-              <div>
-                <h2 className="text-2xl font-bold">⚡ Active Sessions</h2>
-                <p className="text-xs text-gray-400 mt-1">Yellow Network + Circle Arc</p>
-              </div>
-              <button
-                onClick={handleInitSession}
-                disabled={creating || agents.length < 2}
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 rounded-lg text-sm font-semibold transition"
-              >
-                {creating ? 'Creating...' : '+ New Session'}
-              </button>
-            </div>
-
-            {loading ? (
-              <p className="text-gray-400 text-center py-8">Loading sessions...</p>
-            ) : sessions.length === 0 ? (
-              <div className="text-center py-12 bg-white/5 border border-white/10 rounded-xl">
-                <p className="text-gray-400">No active sessions yet</p>
-                <p className="text-xs text-gray-500 mt-2">
-                  Register 2+ agents and create a session to get started
-                </p>
-              </div>
-            ) : (
-              sessions.map((session) => (
-                <motion.div
-                  key={session.sessionId}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur hover:bg-white/10 transition"
-                >
-                  {/* Header */}
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <p className="font-mono text-xs text-gray-400">{session.sessionId}</p>
-                      <p className="text-lg font-bold mt-1">
-                        {session.consumer} → {session.provider}
-                      </p>
-                    </div>
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        session.status === 'active'
-                          ? 'bg-green-900/30 text-green-400'
-                          : session.status === 'settled'
-                          ? 'bg-blue-900/30 text-blue-400'
-                          : 'bg-red-900/30 text-red-400'
-                      }`}
-                    >
-                      {session.status.toUpperCase()}
-                    </span>
-                  </div>
-
-                  {/* Progress Bar */}
-                  <div className="mb-5">
-                    <div className="flex justify-between text-sm text-gray-400 mb-2">
-                      <span>Settlement Progress</span>
-                      <span className="font-mono font-bold">{Math.round(session.progress)}%</span>
-                    </div>
-                    <div className="w-full bg-white/10 rounded-full h-3 overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${session.progress}%` }}
-                        className="h-full bg-gradient-to-r from-yellow-400 via-green-400 to-blue-400"
-                        transition={{ duration: 0.8 }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Stats Grid */}
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div className="bg-yellow-950/20 border border-yellow-500/20 rounded-lg p-3">
-                      <p className="text-xs text-yellow-300 mb-1">💛 Yellow Collateral</p>
-                      <p className="text-xl font-bold text-yellow-400">${session.collateral}</p>
-                    </div>
-                    <div className="bg-blue-950/20 border border-blue-500/20 rounded-lg p-3">
-                      <p className="text-xs text-blue-300 mb-1">💳 Circle Balance</p>
-                      <p className="text-xl font-bold text-blue-400">${session.offChainBalance}</p>
-                    </div>
-                  </div>
-
-                  {/* Integration Badges */}
-                  <div className="flex flex-wrap gap-2 pt-4 border-t border-white/10">
-                    <span className="px-3 py-1 text-xs bg-yellow-900/30 text-yellow-400 rounded-full border border-yellow-500/20">
-                      💛 Yellow Nitrolite Channel
-                    </span>
-                    <span className="px-3 py-1 text-xs bg-blue-900/30 text-blue-400 rounded-full border border-blue-500/20">
-                      💳 Circle Arc USDC
-                    </span>
-                  </div>
-                </motion.div>
-              ))
-            )}
-          </motion.div>
+            </section>
+          </div>
         </div>
       </div>
     </div>

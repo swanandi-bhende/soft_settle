@@ -7,13 +7,13 @@ import { client } from '../lib/apollo';
 import '@rainbow-me/rainbowkit/styles.css';
 import { getDefaultConfig, RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit';
 import { WagmiProvider, http } from 'wagmi';
-import { sepolia } from 'wagmi/chains'; // Switched to Sepolia
+import { sepolia } from 'wagmi/chains';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const config = getDefaultConfig({
   appName: 'Soft-Settle',
-  projectId: '00000000000000000000000000000000', // Dummy ID for RainbowKit internal logic
-  chains: [sepolia], // Only Sepolia
+  projectId: '00000000000000000000000000000000',
+  chains: [sepolia],
   transports: {
     [sepolia.id]: http(),
   },

@@ -1,3 +1,4 @@
+// packages/frontend/components/Analytics.tsx
 'use client';
 
 import { Line } from 'react-chartjs-2';
@@ -46,14 +47,32 @@ export default function Analytics({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700">
-      <h3 className="text-lg font-bold mb-4">Network Velocity</h3>
+    <div className="bg-gray-800/50 backdrop-blur-md p-8 rounded-2xl shadow-lg border border-gray-700">
+      <h3 className="text-xl font-semibold mb-6 text-white">Network Velocity</h3>
       <Line
         data={data}
         options={{
           responsive: true,
           plugins: {
             legend: { display: false },
+          },
+          scales: {
+            y: {
+              grid: {
+                color: 'rgba(255, 255, 255, 0.1)',
+              },
+              ticks: {
+                color: 'rgba(255, 255, 255, 0.7)',
+              },
+            },
+            x: {
+              grid: {
+                color: 'rgba(255, 255, 255, 0.1)',
+              },
+              ticks: {
+                color: 'rgba(255, 255, 255, 0.7)',
+              },
+            },
           },
         }}
       />

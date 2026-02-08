@@ -1,3 +1,4 @@
+// packages/frontend/components/SessionLiveFeed.tsx
 'use client';
 
 import { gql } from '@apollo/client';
@@ -34,13 +35,13 @@ export default function SessionLiveFeed({
     SESSION_UPDATED,
     {
       variables: { sessionId },
-      skip: !sessionId, // 👈 important safety
+      skip: !sessionId,
     }
   );
 
   if (loading) {
     return (
-      <div className="animate-pulse text-gray-400">
+      <div className="animate-pulse text-gray-400 text-lg">
         Connecting to P2P Relay...
       </div>
     );
@@ -48,8 +49,8 @@ export default function SessionLiveFeed({
 
   if (!data) {
     return (
-      <div className="text-gray-500">
-        Waiting for session events…
+      <div className="text-gray-400 text-lg">
+        Waiting for session events...
       </div>
     );
   }
@@ -57,20 +58,19 @@ export default function SessionLiveFeed({
   const { balance, status, nonce } = data.sessionUpdated;
 
   return (
-    <div className="p-4 border rounded-lg bg-gray-900 text-green-400 font-mono">
-      <div className="flex justify-between">
+    <div className="p-6 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl shadow-lg text-white font-mono">
+      <div className="flex justify-between text-base text-gray-300 mb-4">
         <span>Status: {status}</span>
         <span>Nonce: {nonce}</span>
       </div>
 
-      <div className="text-2xl mt-2">
+      <div className="text-3xl font-bold">
         Accumulated: {balance} USDC
       </div>
 
-      {/* Visual progress bar */}
-      <div className="w-full bg-gray-700 h-2 mt-4 rounded">
+      <div className="w-full bg-gray-700 h-3 mt-6 rounded-full overflow-hidden">
         <div
-          className="bg-green-500 h-full transition-all duration-300"
+          className="bg-gradient-to-r from-green-500 to-blue-500 h-full transition-all duration-500"
           style={{
             width: `${Math.min((balance / 10) * 100, 100)}%`,
           }}
