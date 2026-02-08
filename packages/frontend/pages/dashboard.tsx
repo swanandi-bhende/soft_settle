@@ -21,6 +21,8 @@ interface Session {
 interface Agent {
   agentId: string;
   creditScore?: number;
+  ensName?: string;
+  walletAddress?: string;
 }
 
 interface Integration {
@@ -44,6 +46,20 @@ export default function Dashboard() {
   const [newAgent, setNewAgent] = useState('');
   const [registering, setRegistering] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [showPayoutModal, setShowPayoutModal] = useState(false);
+  const [payoutData, setPayoutData] = useState<any>(null);
+  const [selectedSession, setSelectedSession] = useState<string | null>(null);
+  const [microAuthLoading, setMicroAuthLoading] = useState(false);
+  const [yellowLoading, setYellowLoading] = useState(false);
+  const mapSessions = (raw: any[]) => raw.map((s: any) => ({
+    sessionId: s.sessionId,
+    consumer: s.consumerId || s.consumer || 'unknown',
+    provider: s.providerId || s.provider || 'unknown',
+    collateral: s.collateralAmount || s.collateral || 0,
+    offChainBalance: s.balance || s.offChainBalance || 0,
+    status: s.status || 'active',
+    progress: Math.min(100, (((s.transferred || 0) / (s.collateralAmount || s.collateral || 1)) * 100) + (Math.random() * 10))
+  }));
 
   useEffect(() => {
     const fetchData = async () => {
@@ -51,10 +67,7 @@ export default function Dashboard() {
         const sessResp = await fetch(`${BACKEND_URL}/api/sessions`);
         const sessData = await sessResp.json();
         const sessionsList = sessData.sessions || [];
-        setSessions(sessionsList.map((s: any) => ({
-          ...s,
-          progress: Math.min(100, (s.progress || 0) + Math.random() * 15),
-        })));
+        setSessions(mapSessions(sessionsList));
 
         const agentResp = await fetch(`${BACKEND_URL}/api/agents`);
         const agentData = await agentResp.json();
@@ -139,7 +152,7 @@ export default function Dashboard() {
         body: JSON.stringify({
           consumerId: agents[0].agentId,
           providerId: agents[1].agentId,
-          deposit: 50,
+          collateralAmount: 50,
         }),
       });
 
@@ -148,13 +161,96 @@ export default function Dashboard() {
         alert('Session created!');
         const sessResp = await fetch(`${BACKEND_URL}/api/sessions`);
         const sessData = await sessResp.json();
-        setSessions(sessData.sessions || []);
+        setSessions(mapSessions(sessData.sessions || []));
       }
     } catch (error) {
       console.error('Session creation failed:', error);
       alert('Session creation failed');
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleMicroAuth = async (sessionId: string) => {
+    setMicroAuthLoading(true);
+    try {
+      const resp = await fetch(`${BACKEND_URL}/api/micro-auth`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          microAmount: 5,
+          signature: 'eip712-sig-' + Date.now(),
+        }),
+      });
+
+      const data = await resp.json();
+      if (data.success) {
+        alert(`✅ Micro-payment sent! Balance: $${data.newBalance}`);
+        // Refresh sessions
+        const sessResp = await fetch(`${BACKEND_URL}/api/sessions`);
+        const sessData = await sessResp.json();
+        setSessions(mapSessions(sessData.sessions || []));
+      }
+    } catch (error) {
+      console.error('Micro-auth failed:', error);
+      alert('Micro-payment failed');
+    } finally {
+      setMicroAuthLoading(false);
+    }
+  };
+
+  const handleCloseSession = async (sessionId: string) => {
+    try {
+      const resp = await fetch(`${BACKEND_URL}/api/close-session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId }),
+      });
+
+      const data = await resp.json();
+      if (data.success) {
+        setPayoutData(data);
+        setShowPayoutModal(true);
+        // Refresh sessions
+        const sessResp = await fetch(`${BACKEND_URL}/api/sessions`);
+        const sessData = await sessResp.json();
+        setSessions(mapSessions(sessData.sessions || []));
+      }
+    } catch (error) {
+      console.error('Close session failed:', error);
+      alert('Failed to close session');
+    }
+  };
+
+  const handleOpenYellowChannel = async (sessionId: string) => {
+    setYellowLoading(true);
+    try {
+      const session = sessions.find(s => s.sessionId === sessionId);
+      if (!session) {
+        alert('Session not found');
+        return;
+      }
+
+      const resp = await fetch(`${BACKEND_URL}/api/yellow/open-channel`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          deposit: session.collateral,
+          nonce: 0
+        }),
+      });
+
+      const data = await resp.json();
+      if (data.success) {
+        alert(`✅ Nitrolite channel opened!\nStatus: ${data.yellowNetworkChannel.status}\nSDKDetected: ${data.yellowNetworkChannel.sdkDetected ? 'yes' : 'no'}\nReady for off-chain transactions`);
+      }
+    } catch (error) {
+      console.error('Yellow channel failed:', error);
+      alert('Failed to open Yellow channel');
+    } finally {
+      setYellowLoading(false);
     }
   };
 
@@ -263,7 +359,55 @@ export default function Dashboard() {
             </div>
 
             {/* Main Content */}
-            <div className="lg:col-span-3">
+            <div className="lg:col-span-3 space-y-6">
+              {/* Agents Section */}
+              <motion.div
+                variants={fadeInUp}
+                initial="initial"
+                animate="animate"
+                className="rounded-xl bg-gradient-to-br from-slate-800/60 to-slate-700/40 border border-slate-700 backdrop-blur-sm overflow-hidden"
+              >
+                <div className="px-6 py-4 border-b border-slate-700 bg-slate-800/30">
+                  <h2 className="text-lg font-semibold text-white">Registered Agents</h2>
+                </div>
+                <div className="p-6">
+                  {agents.length === 0 ? (
+                    <p className="text-slate-400 text-center py-8">No agents registered yet</p>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {agents.map((agent) => {
+                        const scoreColor = agent.creditScore! >= 700 ? 'text-green-400' : 
+                                          agent.creditScore! >= 500 ? 'text-yellow-400' : 'text-red-400';
+                        const badgeColor = agent.creditScore! >= 700 ? 'bg-green-900/30 border-green-700/30' : 
+                                          agent.creditScore! >= 500 ? 'bg-yellow-900/30 border-yellow-700/30' : 'bg-red-900/30 border-red-700/30';
+                        return (
+                          <motion.div
+                            key={agent.agentId}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="p-4 rounded-lg bg-slate-900/40 border border-slate-700 hover:border-blue-500/30 transition-all"
+                          >
+                            <div className="flex justify-between items-start mb-3">
+                              <div className="flex-1">
+                                <p className="text-sm font-semibold text-white">{agent.agentId}</p>
+                                <p className="text-xs text-slate-500">{agent.ensName}</p>
+                              </div>
+                              <motion.div
+                                whileHover={{ scale: 1.05 }}
+                                className={`px-3 py-1 rounded-full text-sm font-bold ${scoreColor} border ${badgeColor}`}
+                              >
+                                ⭐ {agent.creditScore}
+                              </motion.div>
+                            </div>
+                            <div className="text-xs text-slate-400 font-mono truncate">{agent.walletAddress}</div>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+
               {/* Sessions Section */}
               <motion.div
                 variants={fadeInUp}
@@ -303,8 +447,7 @@ export default function Dashboard() {
                           key={session.sessionId}
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          onClick={() => router.push(`/monitor?session=${encodeURIComponent(session.sessionId)}`)}
-                          className="p-4 rounded-lg bg-slate-900/40 border border-slate-700 hover:border-blue-500/50 transition-all duration-300 cursor-pointer"
+                          className="p-4 rounded-lg bg-slate-900/40 border border-slate-700 hover:border-blue-500/50 transition-all duration-300"
                         >
                           <div className="flex justify-between items-start mb-3">
                             <div className="flex-1">
@@ -359,6 +502,31 @@ export default function Dashboard() {
                             </div>
                           </div>
 
+                          {/* Action Buttons */}
+                          <div className="flex gap-2 mt-4 pt-3 border-t border-slate-700/50">
+                            <button
+                              onClick={() => handleOpenYellowChannel(session.sessionId)}
+                              disabled={yellowLoading}
+                              className="flex-1 px-3 py-2 text-xs rounded-lg bg-gradient-to-r from-yellow-600 to-yellow-700 text-white font-medium hover:from-yellow-500 hover:to-yellow-600 disabled:opacity-50 transition-all duration-300"
+                            >
+                              {yellowLoading ? 'Opening...' : '⚡ Nitrolite'}
+                            </button>
+                            <button
+                              onClick={() => handleMicroAuth(session.sessionId)}
+                              disabled={microAuthLoading || session.status !== 'active'}
+                              className="flex-1 px-3 py-2 text-xs rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium hover:from-blue-500 hover:to-blue-600 disabled:opacity-50 transition-all duration-300"
+                            >
+                              {microAuthLoading ? 'Sending...' : 'Send $5'}
+                            </button>
+                            <button
+                              onClick={() => handleCloseSession(session.sessionId)}
+                              disabled={session.status !== 'active'}
+                              className="flex-1 px-3 py-2 text-xs rounded-lg bg-gradient-to-r from-purple-600 to-purple-700 text-white font-medium hover:from-purple-500 hover:to-purple-600 disabled:opacity-50 transition-all duration-300"
+                            >
+                              Close & Settle
+                            </button>
+                          </div>
+
                           {/* Tags */}
                           <div className="flex gap-2 mt-3 pt-3 border-t border-slate-700/50">
                             <span className="px-2 py-1 text-xs rounded-full bg-yellow-900/30 text-yellow-300 border border-yellow-700/30">
@@ -378,6 +546,72 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Payout Modal */}
+      {showPayoutModal && payoutData && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-slate-700 max-w-md w-full p-8 shadow-2xl"
+          >
+            <div className="text-center mb-6">
+              {payoutData.deficitDetected ? (
+                <>
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-orange-900/30 border border-orange-700/30 mb-4">
+                    <span className="text-3xl">⚠️</span>
+                  </div>
+                  <h2 className="text-2xl font-bold text-white mb-2">Deficit Detected</h2>
+                  <p className="text-slate-400">Circle payout has been triggered</p>
+                </>
+              ) : (
+                <>
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-900/30 border border-green-700/30 mb-4">
+                    <span className="text-3xl">✅</span>
+                  </div>
+                  <h2 className="text-2xl font-bold text-white mb-2">Session Settled</h2>
+                  <p className="text-slate-400">Reputation updated on ENS</p>
+                </>
+              )}
+            </div>
+
+            <div className="space-y-4 mb-6">
+              <div className="p-4 rounded-lg bg-slate-900/60 border border-slate-700">
+                <p className="text-xs text-slate-500 mb-2">Total Transferred</p>
+                <p className="text-2xl font-bold text-white">${payoutData.finalTransferred}</p>
+              </div>
+
+              {payoutData.deficitDetected && (
+                <div className="p-4 rounded-lg bg-orange-900/20 border border-orange-700/30">
+                  <p className="text-xs text-orange-400 mb-2">🔄 Payout via Circle</p>
+                  <p className="text-lg font-semibold text-orange-300">${payoutData.deficit} USDC</p>
+                </div>
+              )}
+
+              {payoutData.reputationUpdate && (
+                <div className="p-4 rounded-lg bg-purple-900/20 border border-purple-700/30">
+                  <p className="text-xs text-purple-400 mb-2">📊 ENS Reputation Updated</p>
+                  <p className="text-sm text-purple-300">
+                    Score: {payoutData.reputationUpdate.previousScore} → {payoutData.reputationUpdate.newScore}
+                  </p>
+                </div>
+              )}
+
+              <div className="p-4 rounded-lg bg-slate-900/40 border border-slate-700 text-xs text-slate-400 font-mono">
+                <p className="truncate">Tx: {payoutData.contractAddress}</p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowPayoutModal(false)}
+              className="w-full py-3 px-4 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold hover:from-blue-500 hover:to-blue-600 transition-all duration-300"
+            >
+              Close
+            </button>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

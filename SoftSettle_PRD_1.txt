@@ -11,14 +11,7 @@ The core innovation is a "trust tunnel" that allows agents to stream micro-autho
 The system operates on Ethereum-compatible chains, using smart contracts for collateral locking, state enforcement, and reputation management. Off-chain components handle real-time communication via P2P protocols. Security relies on EIP-712 signatures for state updates, nonces to prevent replays, and a challenge period for unilateral closures to handle disputes. The architecture ensures scalability for high-frequency interactions while keeping gas costs low.
 We will build a web application that serves as a hub for agent registration, management, and interaction. The site will act as a dashboard for developers/human overseers to onboard agents, monitor sessions, and configure parameters, while providing APIs for agents to interact autonomously. Agents themselves will primarily use backend APIs, but the site will include tools for simulating agent behaviors during development.
 
-Technical pillars-
-Blockchain Layer: Solidity smart contracts for Nitrolite channels, Reputation Manager, and integration hooks for Circle APIs.
-Off-Chain Layer: Node.js or Go-based microservices for P2P messaging, signature validation, and session orchestration.
-Frontend Layer: React.js with Web3.js/Ethers.js for wallet interactions, real-time data via GraphQL subscriptions.
-Backend Layer: API server (e.g., Express.js) for agent registration, session queries, and Circle/ENS integrations.
-Data Storage: IPFS for off-chain logs (optional for audits), The Graph for indexing on-chain events.
-Security Features: Multi-signature for critical actions, rate limiting on APIs, and zero-knowledge proofs (future enhancement) for private settlements.
-Scalability: Horizontal scaling of off-chain nodes; L2 rollups for on-chain ops to handle 1,000+ concurrent sessions.
+
 User Workflow-
 Agent Registration (On Website):
 Developer navigates to the Soft-Settle website and connects their Ethereum wallet.
@@ -46,29 +39,7 @@ Post-Session Management (On Website):
 Developers review session logs, dispute if needed.
 Agents can query their reputation via API for future interactions.
 UI: Analytics tab with graphs, akin to Dune Analytics' customizable dashboards.
-Build Plan-
-Tech Stack
-Frontend: React.js + Next.js (for SSR/SEO), Tailwind CSS (responsive), Web3Modal (wallet integration), Ethers.js (contract calls).
-Backend: Node.js/Express, GraphQL (Apollo) for APIs, MongoDB/Postgres for agent registry.
-Blockchain: Hardhat for dev/testing, Solidity 0.8.x for contracts.
-Integrations: Yellow Network SDK, Circle API SDK, ENS.js.
-Tools: Vercel for hosting, Alchemy/Infura for RPC, Sentry for monitoring.
 
-Core Smart Contracts and Backend
-Develop/deploy Nitrolite channel contracts, Reputation Manager.
-Build API endpoints: /register-agent, /init-session, /query-reputation.
-Implement off-chain messaging: WebSocket server for P2P relay.
-Testing: Unit tests (Mocha/Chai), integration tests with Ganache; simulate 100 sessions.
-Frontend Development
-Build pages: Landing, Dashboard, Agent Registration, Session Monitor.
-Features: Wallet connect button (top-right, like MetaMask integrations), real-time updates via subscriptions.
-UI Polish: Animations (Framer Motion), charts (Chart.js), themes (dark/light auto-detect).
-Agent API Docs: Swagger UI for programmatic access.
-Integrations and Testing
-Hook in Circle/Arc for payouts (API keys in env vars).
-ENS integration for record reads/writes.
-End-to-End Testing: Cypress for UI, load testing with Artillery for scalability.
-Beta: Deploy to testnet.
 Value Proposition-
 Enables "pay-per-bit" micro-transactions at internet speeds.
 Reduces trust requirements through collateralized state channels and reputation scores.
